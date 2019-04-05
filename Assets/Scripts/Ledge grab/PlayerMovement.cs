@@ -20,7 +20,7 @@ public class PlayerMovement : MonoBehaviour
     public float _maxJumpHeight = 0f;
 
     public bool _holdingOntoLedge = false;
-    private bool topBlocked, frontBlocked, ledge;
+    public bool topBlocked, frontBlocked, ledge;
 
     public Transform cubeVisualization;
 
@@ -61,7 +61,51 @@ public class PlayerMovement : MonoBehaviour
             return false;
         }
 
-        return false;
+        RaycastHit[] topHits = Physics.BoxCastAll(center: transform.position + Vector3.up * 1.2f,
+                                                   halfExtents: halfExtends,
+                                                   direction: _input,
+                                                   orientation: transform.rotation,
+                                                   maxDistance: 0.3f,
+                                                   layermask: _boxesLayer);
+
+        if (topHits.Length >= 1)
+        {
+            topBlocked = true;
+            return false;
+        }
+        else
+            topBlocked = false;
+
+        frontBlocked = Physics.BoxCast(center: transform.position + Vector3.up * 1.2f,
+                                          halfExtents: halfExtends,
+                                          direction: _input,
+                                          orientation: transform.rotation,
+                                          maxDistance: 0.3f,
+                                       layerMask: _boxesLayer);
+
+        if (frontBlocked)
+            return false;
+
+        ledge = Physics.BoxCast(center: transform.position + Vector3.up * 1.2f + _input * 0.3f,
+                                      halfExtents: halfExtends,
+                                      direction: Vector3.down,
+                                      hitInfo: out _hitInfo,
+                                      orientation: transform.rotation,
+                                      maxDistance: 0.5f,
+                                      layerMask: _boxesLayer);
+
+        if (ledge)
+        {
+            cubeVisualization.gameObject.SetActive(true);
+            cubeVisualization.rotation = transform.rotation;
+            cubeVisualization.position = transform.position + Vector3.up * 1.2f + _input * 0.3f;
+
+            cubeVisualization.position += _hitInfo.distance * Vector3.down;
+
+            return true;
+        }
+        else
+            return false;
     }
 
     private void GrabLedge()
